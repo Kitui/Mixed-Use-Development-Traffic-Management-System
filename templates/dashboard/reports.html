@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-kicker">Operations intelligence</div>
+        <h1 class="h3 page-title">Reports</h1>
+        <p class="page-subtitle">Review estate traffic activity and export operational data.</p>
+    </div>
+</div>
+
+<form method="get" class="filter-card mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label" for="start-date">Start date</label>
+            <input class="form-control" id="start-date" type="date" name="start" value="{{ start }}">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" for="end-date">End date</label>
+            <input class="form-control" id="end-date" type="date" name="end" value="{{ end }}">
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-outline-primary w-100" type="submit"><svg class="app-icon"><use href="#icon-filter"></use></svg>Apply</button>
+        </div>
+        <div class="col-md-2">
+            <a class="btn btn-outline-secondary w-100" href="{% url 'dashboard:reports' %}">Reset</a>
+        </div>
+    </div>
+</form>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-2"><div class="card metric-card"><div class="card-body"><div class="metric-label">Logs</div><div class="metric-value">{{ log_count }}</div></div></div></div>
+    <div class="col-md-2"><div class="card metric-card"><div class="card-body"><div class="metric-label">Entries</div><div class="metric-value">{{ entry_count }}</div></div></div></div>
+    <div class="col-md-2"><div class="card metric-card"><div class="card-body"><div class="metric-label">Exits</div><div class="metric-value">{{ exit_count }}</div></div></div></div>
+    <div class="col-md-2"><div class="card metric-card"><div class="card-body"><div class="metric-label">Visitors</div><div class="metric-value">{{ visitor_count }}</div></div></div></div>
+    <div class="col-md-2"><div class="card metric-card"><div class="card-body"><div class="metric-label">Vehicles</div><div class="metric-value">{{ vehicle_count }}</div></div></div></div>
+    <div class="col-md-2"><div class="card metric-card"><div class="card-body"><div class="metric-label">Residents</div><div class="metric-value">{{ resident_count }}</div></div></div></div>
+</div>
+
+<div class="soft-card p-4 mb-3">
+    <h2 class="h5">Exports</h2>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-primary" href="{% url 'dashboard:export_logs_csv' %}?start={{ start }}&end={{ end }}"><svg class="app-icon"><use href="#icon-download"></use></svg>Download Logs CSV</a>
+        <a class="btn btn-outline-primary" href="{% url 'dashboard:export_visitors_csv' %}"><svg class="app-icon"><use href="#icon-download"></use></svg>Download Visitors CSV</a>
+        <a class="btn btn-outline-primary" href="{% url 'dashboard:export_vehicles_csv' %}"><svg class="app-icon"><use href="#icon-download"></use></svg>Download Vehicles CSV</a>
+        <a class="btn btn-primary" href="{% url 'dashboard:reports_pdf' %}?start={{ start }}&end={{ end }}"><svg class="app-icon"><use href="#icon-download"></use></svg>Download Report PDF</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-3 align-items-stretch">
+    <div class="col-lg-4">
+        <div class="soft-card report-chart-card">
+            <h2 class="h6 mb-3">Daily Movement Chart</h2>
+            <div class="report-chart-frame"><canvas id="dailyChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="soft-card report-chart-card">
+            <h2 class="h6 mb-3">Visitor Status Chart</h2>
+            <div class="report-chart-frame"><canvas id="statusChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="soft-card report-chart-card">
+            <h2 class="h6 mb-3">Gate Activity by Development Type</h2>
+            <div class="report-chart-frame"><canvas id="gateChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3 align-items-stretch">
+    <div class="col-lg-8">
+        <div class="soft-card report-chart-card">
+            <h2 class="h6 mb-3">Hourly Traffic Trend</h2>
+            <div class="report-chart-frame"><canvas id="hourlyChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="soft-card report-chart-card">
+            <h2 class="h6 mb-3">Guest Type Mix</h2>
+            <div class="report-chart-frame"><canvas id="guestTypeChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="soft-card report-chart-card">
+            <h2 class="h6 mb-3">Vehicle Class Split</h2>
+            <div class="report-chart-frame"><canvas id="vehicleClassChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="soft-card report-chart-card">
+            <h2 class="h6 mb-3">Destination Load</h2>
+            <div class="report-chart-frame"><canvas id="destinationLoadChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="soft-card report-chart-card">
+            <h2 class="h6 mb-3">Gates Workload</h2>
+            <div class="report-chart-frame"><canvas id="gateWorkloadChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h5">Daily Movement</h2>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Date</th><th>Direction</th><th>Total</th></tr></thead>
+                        <tbody>
+                        {% for row in daily_logs %}
+                            <tr><td>{{ row.day }}</td><td>{{ row.direction }}</td><td>{{ row.total }}</td></tr>
+                        {% empty %}
+                            <tr><td colspan="3" class="text-muted">No movement in this date range.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h5">Gate Activity Summary</h2>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Checkpoint</th><th>Gate</th><th>Destination</th><th>Entries</th><th>Exits</th><th>Total</th></tr></thead>
+                        <tbody>
+                        {% for row in gate_activity_summary %}
+                            <tr>
+                                <td>{{ row.checkpoint_type }}</td>
+                                <td>{{ row.gate }}</td>
+                                <td>{{ row.destination }}</td>
+                                <td><span class="status-pill status-checked_in">{{ row.entries }}</span></td>
+                                <td><span class="status-pill status-checkout_requested">{{ row.exits }}</span></td>
+                                <td><strong>{{ row.total }}</strong></td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="6" class="text-muted">No gate activity in this date range.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h5">Visitor Status</h2>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Status</th><th>Total</th></tr></thead>
+                        <tbody>
+                        {% for row in visitor_statuses %}
+                            <tr><td>{{ row.status }}</td><td>{{ row.total }}</td></tr>
+                        {% empty %}
+                            <tr><td colspan="2" class="text-muted">No visitors found.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h5">Vehicle Types</h2>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Type</th><th>Total</th></tr></thead>
+                        <tbody>
+                        {% for row in vehicle_types %}
+                            <tr><td>{{ row.vehicle_type }}</td><td>{{ row.total }}</td></tr>
+                        {% empty %}
+                            <tr><td colspan="2" class="text-muted">No vehicles found.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h5">Guest Types</h2>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Type</th><th>Total</th></tr></thead>
+                        <tbody>
+                        {% for row in guest_types %}
+                            <tr><td>{{ row.guest_type }}</td><td>{{ row.total }}</td></tr>
+                        {% empty %}
+                            <tr><td colspan="2" class="text-muted">No visitors found.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h5">Destination Queues</h2>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Destination</th><th>Total</th></tr></thead>
+                        <tbody>
+                        {% for row in destination_activity %}
+                            <tr><td>{{ row.destination__name|default:'Unassigned' }}</td><td>{{ row.total }}</td></tr>
+                        {% empty %}
+                            <tr><td colspan="2" class="text-muted">No destinations found.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{ daily_chart_json|json_script:"daily-chart-data" }}
+{{ visitor_status_chart_json|json_script:"status-chart-data" }}
+{{ gate_activity_chart_json|json_script:"gate-chart-data" }}
+{{ hourly_activity_chart_json|json_script:"hourly-activity-chart-data" }}
+{{ guest_type_chart_json|json_script:"guest-type-chart-data" }}
+{{ vehicle_class_chart_json|json_script:"vehicle-class-chart-data" }}
+{{ destination_load_chart_json|json_script:"destination-load-chart-data" }}
+{{ gate_workload_chart_json|json_script:"gate-workload-chart-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const chartColor = '#1f7a4d';
+    const goldColor = '#c7a342';
+    const accentColors = [chartColor, goldColor, '#0f766e', '#4d7c0f', '#64748b', '#2563eb', '#dc2626', '#7c3aed'];
+    const parseChart = (id) => JSON.parse(document.getElementById(id).textContent);
+    const daily = parseChart('daily-chart-data');
+    const statusData = parseChart('status-chart-data');
+    const gateData = parseChart('gate-chart-data');
+    const hourlyData = parseChart('hourly-activity-chart-data');
+    const guestTypeData = parseChart('guest-type-chart-data');
+    const vehicleClassData = parseChart('vehicle-class-chart-data');
+    const destinationLoadData = parseChart('destination-load-chart-data');
+    const gateWorkloadData = parseChart('gate-workload-chart-data');
+
+    new Chart(document.getElementById('dailyChart'), {
+        type: 'bar',
+        data: { labels: daily.labels, datasets: [{ label: 'Movement', data: daily.values, backgroundColor: chartColor }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+    new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: { labels: statusData.labels, datasets: [{ data: statusData.values, backgroundColor: [chartColor, goldColor, '#4d7c0f', '#0f766e', '#64748b', '#ef4444'] }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '48%', layout: { padding: 4 }, plugins: { legend: { position: 'bottom' } } }
+    });
+    new Chart(document.getElementById('gateChart'), {
+        type: 'bar',
+        data: {
+            labels: gateData.labels,
+            datasets: [
+                { label: 'Residential', data: gateData.residential, backgroundColor: chartColor },
+                { label: 'Commercial', data: gateData.commercial, backgroundColor: goldColor },
+                { label: 'Unassigned', data: gateData.unassigned, backgroundColor: '#64748b' }
+            ]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } },
+            scales: { x: { stacked: true, beginAtZero: true }, y: { stacked: true } }
+        }
+    });
+    new Chart(document.getElementById('hourlyChart'), {
+        type: 'line',
+        data: { labels: hourlyData.labels, datasets: [{ label: 'Traffic logs', data: hourlyData.values, borderColor: chartColor, backgroundColor: 'rgba(31, 122, 77, .14)', fill: true, tension: .35, pointRadius: 2 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+    new Chart(document.getElementById('guestTypeChart'), {
+        type: 'polarArea',
+        data: { labels: guestTypeData.labels, datasets: [{ data: guestTypeData.values, backgroundColor: accentColors }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+    });
+    new Chart(document.getElementById('vehicleClassChart'), {
+        type: 'pie',
+        data: { labels: vehicleClassData.labels, datasets: [{ data: vehicleClassData.values, backgroundColor: [chartColor, goldColor, '#0f766e'] }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+    });
+    new Chart(document.getElementById('destinationLoadChart'), {
+        type: 'bar',
+        data: { labels: destinationLoadData.labels, datasets: [{ label: 'Visitors', data: destinationLoadData.values, backgroundColor: '#0f766e' }] },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } }
+    });
+    new Chart(document.getElementById('gateWorkloadChart'), {
+        type: 'bar',
+        data: {
+            labels: gateWorkloadData.labels,
+            datasets: [
+                { label: 'Entries', data: gateWorkloadData.entries, backgroundColor: chartColor },
+                { label: 'Exits', data: gateWorkloadData.exits, backgroundColor: goldColor }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } },
+            scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Traffic Logs | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-kicker">Audit trail</div>
+        <h1 class="h3 page-title">Entry/Exit Logs</h1>
+        <p class="page-subtitle">Review resident, visitor, and vehicle movement across main gates and units.</p>
+    </div>
+    {% if is_admin_user or is_main_gate_guard_user %}
+        <a class="btn btn-primary" href="{% url 'traffic_logs:create' %}"><svg class="app-icon"><use href="#icon-plus"></use></svg>Record Entry/Exit</a>
+    {% endif %}
+</div>
+<form method="get" class="filter-card mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label" for="log-search">Search</label>
+            <input class="form-control" id="log-search" type="search" name="q" value="{{ query }}" placeholder="Person, plate, gate, or guard">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="log-checkpoint">Checkpoint</label>
+            <select class="form-select" id="log-checkpoint" name="checkpoint_type">
+                <option value="">All</option>
+                {% for value, label in checkpoint_types %}
+                    <option value="{{ value }}" {% if checkpoint_type == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="log-subject">Subject</label>
+            <select class="form-select" id="log-subject" name="subject_type">
+                <option value="">All</option>
+                {% for value, label in subject_types %}
+                    <option value="{{ value }}" {% if subject_type == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="log-direction">Direction</label>
+            <select class="form-select" id="log-direction" name="direction">
+                <option value="">All</option>
+                {% for value, label in directions %}
+                    <option value="{{ value }}" {% if direction == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-outline-primary w-100" type="submit"><svg class="app-icon"><use href="#icon-filter"></use></svg>Filter</button>
+        </div>
+    </div>
+</form>
+<div class="data-card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Time</th><th>Checkpoint</th><th>Subject</th><th>Direction</th><th>Resident</th><th>Visitor</th><th>Vehicle</th><th>Gate/Destination</th><th>Guard</th><th></th></tr></thead>
+            <tbody>
+            {% for log in logs %}
+                <tr>
+                    <td>{{ log.recorded_at|date:"M d, Y H:i" }}</td>
+                    <td>{{ log.get_checkpoint_type_display }}</td>
+                    <td>{{ log.get_subject_type_display }}</td>
+                    <td>{{ log.get_direction_display }}</td>
+                    <td>{{ log.resident|default:'-' }}</td>
+                    <td>{{ log.visitor|default:'-' }}</td>
+                    <td>{{ log.vehicle|default:'-' }}</td>
+                    <td>
+                        {% if log.gate %}{{ log.get_gate_display }}{% else %}-{% endif %}
+                        <br><span class="text-muted">{{ log.community_unit|default:'-' }}</span>
+                    </td>
+                    <td>{{ log.recorded_by|default:'-' }}</td>
+                    <td class="text-end">
+                        {% if is_admin_user %}
+                            <form method="post" action="{% url 'traffic_logs:delete' log.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="10"><div class="empty-state">No traffic logs found.</div></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

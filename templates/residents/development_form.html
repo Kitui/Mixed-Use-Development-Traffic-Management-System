@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title|default:'Development' }} | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="form-shell">
+    <div class="form-shell-header">
+        <p class="text-uppercase small fw-semibold mb-2">Tilisi developments</p>
+        <h1 class="h3 mb-2">{{ title|default:'Development' }}</h1>
+        <p>Add residential developments and commercial companies that can receive visitors and deliveries.</p>
+    </div>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="form-shell-body">
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div class="form-panel">
+                        <div class="form-panel-title"><span>1</span> Development Details</div>
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label" for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+                                {{ form.name }}
+                                {{ form.name.errors }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="{{ form.unit_type.id_for_label }}">{{ form.unit_type.label }}</label>
+                                {{ form.unit_type }}
+                                {{ form.unit_type.errors }}
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label" for="{{ form.contact_phone.id_for_label }}">{{ form.contact_phone.label }}</label>
+                                {{ form.contact_phone }}
+                                {{ form.contact_phone.errors }}
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <div>
+                                    <div class="form-check form-switch mb-2">
+                                        {{ form.is_active }}
+                                        <label class="form-check-label" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+                                    </div>
+                                    {{ form.is_active.errors }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="form-panel">
+                        <div class="form-panel-title"><span>2</span> Usage</div>
+                        <p class="form-help-text mb-0">Developments appear as destinations for visitor requests, resident/employee records, unit guard queues, and gate reports.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-outline-secondary" href="{% url 'residents:developments' %}">Cancel</a>
+            <button class="btn btn-primary px-4" type="submit">Save Development</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

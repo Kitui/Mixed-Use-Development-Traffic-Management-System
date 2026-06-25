@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title|default:'Resident' }} | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="form-shell">
+    <div class="form-shell-header">
+        <p class="text-uppercase small fw-semibold mb-2">Admin master list</p>
+        <h1 class="h3 mb-2">{{ title|default:'Resident' }}</h1>
+        <p>{% if company_unit %}Add employees for {{ company_unit }} who can be selected during company movement checks.{% else %}Add residents, company employees, and reception contacts who can be selected during movement checks.{% endif %}</p>
+    </div>
+    <form method="post" novalidate>
+    {% csrf_token %}
+        <div class="form-shell-body">
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="form-panel">
+                        <div class="form-panel-title"><span>1</span> Personal Details</div>
+                        <div class="row g-3">
+                            {% if form.community_unit %}
+                                <div class="col-md-6">
+                                    <label class="form-label" for="{{ form.community_unit.id_for_label }}">{{ form.community_unit.label }}</label>
+                                    {{ form.community_unit }}
+                                    {{ form.community_unit.errors }}
+                                </div>
+                            {% endif %}
+                            {% if form.person_type %}
+                                <div class="col-md-6">
+                                    <label class="form-label" for="{{ form.person_type.id_for_label }}">{{ form.person_type.label }}</label>
+                                    {{ form.person_type }}
+                                    {{ form.person_type.errors }}
+                                </div>
+                            {% endif %}
+                            <div class="col-12">
+                                <label class="form-label" for="{{ form.full_name.id_for_label }}">{{ form.full_name.label }}</label>
+                                {{ form.full_name }}
+                                {{ form.full_name.errors }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.house_number.id_for_label }}">{{ form.house_number.label }}</label>
+                                {{ form.house_number }}
+                                {{ form.house_number.errors }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.phone.id_for_label }}">{{ form.phone.label }}</label>
+                                {{ form.phone }}
+                                {{ form.phone.errors }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="form-panel">
+                        <div class="form-panel-title"><span>2</span> Contact and Status</div>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label" for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                                {{ form.email }}
+                                {{ form.email.errors }}
+                                <div class="form-help-text mt-1">Optional, but useful for company reception or digital approvals.</div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="{{ form.emergency_contact.id_for_label }}">{{ form.emergency_contact.label }}</label>
+                                {{ form.emergency_contact }}
+                                {{ form.emergency_contact.errors }}
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch mt-2">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+                                </div>
+                                <div class="form-help-text mt-1">Inactive records are kept for history but removed from active guard selections.</div>
+                                {{ form.is_active.errors }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-outline-secondary" href="{% url 'residents:list' %}">Cancel</a>
+            <button class="btn btn-success px-4" type="submit">{% if company_unit %}Save Employee{% else %}Save Resident{% endif %}</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

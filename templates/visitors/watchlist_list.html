@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Watchlist | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-kicker">Safety controls</div>
+        <h1 class="h3 page-title">Watchlist</h1>
+        <p class="page-subtitle">Blacklist or monitor people and plates that should be flagged during booking.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'visitors:watchlist_create' %}"><svg class="app-icon"><use href="#icon-plus"></use></svg>Add Entry</a>
+</div>
+<div class="data-card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Type</th><th>Value</th><th>Reason</th><th>Status</th><th>Created By</th><th></th></tr></thead>
+            <tbody>
+            {% for entry in entries %}
+                <tr>
+                    <td>{{ entry.get_entry_type_display }}</td>
+                    <td>{{ entry.value }}</td>
+                    <td>{{ entry.reason }}</td>
+                    <td>{% if entry.is_active %}<span class="badge text-bg-danger">Active</span>{% else %}<span class="badge text-bg-secondary">Inactive</span>{% endif %}</td>
+                    <td>{{ entry.created_by|default:'-' }}</td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'visitors:watchlist_edit' entry.pk %}">Edit</a></td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6"><div class="empty-state">No watchlist entries.</div></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

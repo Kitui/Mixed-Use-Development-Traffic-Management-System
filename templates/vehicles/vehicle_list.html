@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Vehicles | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-kicker">Master list</div>
+        <h1 class="h3 page-title">{% if company_unit %}Company Vehicles{% else %}Vehicles{% endif %}</h1>
+        <p class="page-subtitle">{% if company_unit %}Register cars and motorcycles for employees at {{ company_unit }}.{% else %}Register cars and motorcycles used by residents, visitors, and service providers.{% endif %}</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'vehicles:create' %}"><svg class="app-icon"><use href="#icon-plus"></use></svg>{% if company_unit %}Add Company Vehicle{% else %}Add Vehicle{% endif %}</a>
+</div>
+<form method="get" class="filter-card mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label" for="vehicle-search">Search</label>
+            <input class="form-control" id="vehicle-search" type="search" name="q" value="{{ query }}" placeholder="Plate, model, color, or owner">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="vehicle-type">Type</label>
+            <select class="form-select" id="vehicle-type" name="type">
+                <option value="">All</option>
+                {% for value, label in vehicle_types %}
+                    <option value="{{ value }}" {% if vehicle_type == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="vehicle-status">Status</label>
+            <select class="form-select" id="vehicle-status" name="status">
+                <option value="">All</option>
+                <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-outline-primary w-100" type="submit"><svg class="app-icon"><use href="#icon-filter"></use></svg>Filter</button>
+        </div>
+    </div>
+</form>
+<div class="data-card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Plate</th><th>Type</th><th>Class</th><th>Resident Owner</th><th>Visitor Owner</th><th>Model</th><th>Color</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            {% for vehicle in vehicles %}
+                <tr>
+                    <td>{{ vehicle.plate_number }}</td>
+                    <td>{{ vehicle.get_vehicle_type_display }}</td>
+                    <td>{{ vehicle.get_vehicle_class_display }}</td>
+                    <td>{{ vehicle.resident_owner|default:'-' }}</td>
+                    <td>{{ vehicle.visitor_owner|default:'-' }}</td>
+                    <td>{{ vehicle.make_model|default:'-' }}</td>
+                    <td>{{ vehicle.color|default:'-' }}</td>
+                    <td>{% if vehicle.is_active %}<span class="badge text-bg-success">Active</span>{% else %}<span class="badge text-bg-secondary">Inactive</span>{% endif %}</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary" href="{% url 'vehicles:edit' vehicle.pk %}">Edit</a>
+                        {% if is_admin_user %}
+                            <form method="post" action="{% url 'vehicles:delete' vehicle.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="9"><div class="empty-state">No vehicles found.</div></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

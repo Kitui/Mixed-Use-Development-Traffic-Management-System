@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-kicker">Action center</div>
+        <h1 class="h3 page-title">Notifications</h1>
+        <p class="page-subtitle">Alerts from visitor approvals, gate entries, unit confirmations, and checkout movement.</p>
+    </div>
+</div>
+
+<div class="d-grid gap-3">
+    {% for note in notifications %}
+        <div class="task-card">
+            <div class="d-flex flex-wrap justify-content-between gap-3">
+                <div>
+                    <h2 class="h6 mb-1">{{ note.title }}</h2>
+                    <p class="text-muted mb-1">{{ note.message }}</p>
+                    <span class="small text-muted">{{ note.created_at|date:"M d, Y H:i" }}</span>
+                </div>
+                <div class="d-flex align-items-start gap-2">
+                    {% if not note.is_read %}<span class="status-pill">New</span>{% endif %}
+                    <form method="post" action="{% url 'dashboard:notification_read' note.pk %}">
+                        {% csrf_token %}
+                        <button class="btn btn-sm btn-outline-primary" type="submit">Open</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="soft-card empty-state">No notifications yet.</div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}Unit Guard Tasks | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h1 class="h3 mb-2">Unit Guard Tasks</h1>
+            <p class="mb-0">Confirm arrivals at your estate/company and release checked-out visitors to the main gate.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge text-bg-light">{{ arrival_count }} arrivals</span>
+            <span class="badge text-bg-warning">{{ exit_count }} exits</span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12">
+        <div class="section-title">
+            <span>0</span>
+            <h2 class="h5 mb-0">Resident / Employee Movement</h2>
+        </div>
+        <form method="post" action="{% url 'dashboard:record_unit_movement' %}" class="task-card" id="unit-movement-form">
+            {% csrf_token %}
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-5">
+                    <label class="form-label" for="vehicle-select">Registered car or motorcycle</label>
+                    <select class="form-select" id="vehicle-select" name="vehicle" required>
+                        <option value="">Select from admin master list</option>
+                        {% for vehicle in registered_vehicles %}
+                            <option
+                                value="{{ vehicle.pk }}"
+                                data-owner="{{ vehicle.resident_owner.full_name }}"
+                                data-phone="{{ vehicle.resident_owner.phone }}"
+                                data-unit="{{ vehicle.resident_owner.community_unit|default:'-' }}"
+                                data-house="{{ vehicle.resident_owner.house_number }}"
+                                data-class="{{ vehicle.get_vehicle_class_display }}"
+                                data-plate="{{ vehicle.plate_number }}"
+                                data-model="{{ vehicle.make_model|default:'-' }}"
+                                data-color="{{ vehicle.color|default:'-' }}"
+                            >
+                                {{ vehicle.plate_number }} - {{ vehicle.resident_owner.full_name }} ({{ vehicle.get_vehicle_class_display }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-3">
+                    <label class="form-label" for="movement-direction">Movement</label>
+                    <select class="form-select" id="movement-direction" name="direction" required>
+                        <option value="ENTRY">Confirm Unit Entry</option>
+                        <option value="EXIT">Record Unit Exit</option>
+                    </select>
+                </div>
+                <div class="col-lg-4">
+                    <button class="btn btn-success w-100" type="submit">Save Movement</button>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-3">
+                <div class="col-md-4">
+                    <label class="form-label">Resident / Employee</label>
+                    <input class="form-control" id="movement-owner" type="text" readonly placeholder="Auto-filled after selection">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Unit and House/Office</label>
+                    <input class="form-control" id="movement-unit" type="text" readonly placeholder="Auto-filled after selection">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Phone</label>
+                    <input class="form-control" id="movement-phone" type="text" readonly placeholder="Auto-filled after selection">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Vehicle Type</label>
+                    <input class="form-control" id="movement-class" type="text" readonly>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Plate</label>
+                    <input class="form-control" id="movement-plate" type="text" readonly>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Model</label>
+                    <input class="form-control" id="movement-model" type="text" readonly>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Color</label>
+                    <input class="form-control" id="movement-color" type="text" readonly>
+                </div>
+            </div>
+            <p class="text-muted small mt-3 mb-0">Entry confirms a resident/employee has reached the estate/company. Exit records that they have left the unit and should be confirmed by the main gate.</p>
+        </form>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="section-title">
+            <span>1</span>
+            <h2 class="h5 mb-0">Arrival Queue</h2>
+        </div>
+        <div class="d-grid gap-3">
+            {% for visitor in arrivals %}
+                <div class="task-card">
+                    <div class="d-flex justify-content-between gap-3">
+                        <div>
+                            <h3 class="h6 mb-1">{{ visitor.full_name }}</h3>
+                            <div class="text-muted small">{{ visitor.get_guest_type_display }} for {{ visitor.destination|default:'Unassigned destination' }}</div>
+                        </div>
+                        <span class="status-pill">{{ visitor.get_status_display }}</span>
+                    </div>
+                    <div class="row mt-3 small">
+                        <div class="col-sm-6"><strong>Phone:</strong> {{ visitor.phone }}</div>
+                        <div class="col-sm-6"><strong>Vehicle:</strong> {{ visitor.vehicle_plate|default:'-' }}</div>
+                        <div class="col-12 mt-1"><strong>Purpose:</strong> {{ visitor.purpose }}</div>
+                    </div>
+                    <div class="mt-3 d-flex gap-2">
+                        <form method="post" action="{% url 'visitors:unit_checkin' visitor.pk %}">
+                            {% csrf_token %}
+                            <button class="btn btn-success btn-sm" type="submit">Confirm Arrival</button>
+                        </form>
+                        <form method="post" action="{% url 'visitors:redirect' visitor.pk %}" class="d-flex gap-2">
+                            {% csrf_token %}
+                            <select class="form-select form-select-sm" name="destination">
+                                {% for unit in destinations %}
+                                    <option value="{{ unit.pk }}" {% if visitor.destination_id == unit.pk %}selected{% endif %}>{{ unit.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-outline-secondary btn-sm" type="submit">Redirect</button>
+                        </form>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="soft-card p-4 text-muted">No visitors are waiting for unit arrival confirmation.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="section-title">
+            <span>2</span>
+            <h2 class="h5 mb-0">Exit Queue</h2>
+        </div>
+        <div class="d-grid gap-3">
+            {% for visitor in exits %}
+                <div class="task-card">
+                    <div class="d-flex justify-content-between gap-3">
+                        <div>
+                            <h3 class="h6 mb-1">{{ visitor.full_name }}</h3>
+                            <div class="text-muted small">{{ visitor.destination|default:'Unassigned destination' }}</div>
+                        </div>
+                        <span class="status-pill">{{ visitor.get_status_display }}</span>
+                    </div>
+                    <div class="row mt-3 small">
+                        <div class="col-sm-6"><strong>Phone:</strong> {{ visitor.phone }}</div>
+                        <div class="col-sm-6"><strong>Vehicle:</strong> {{ visitor.vehicle_plate|default:'-' }}</div>
+                        <div class="col-12 mt-1"><strong>Purpose:</strong> {{ visitor.purpose }}</div>
+                    </div>
+                    <form method="post" action="{% url 'visitors:unit_release_exit' visitor.pk %}" class="mt-3">
+                        {% csrf_token %}
+                        <button class="btn btn-outline-success btn-sm" type="submit">Release to Main Gate</button>
+                    </form>
+                </div>
+            {% empty %}
+                <div class="soft-card p-4 text-muted">No checkout requests are waiting for release.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    const vehicleSelect = document.getElementById('vehicle-select');
+    const setValue = (id, value) => {
+        const field = document.getElementById(id);
+        if (field) field.value = value || '';
+    };
+    if (vehicleSelect) {
+        vehicleSelect.addEventListener('change', () => {
+            const option = vehicleSelect.selectedOptions[0];
+            setValue('movement-owner', option.dataset.owner);
+            setValue('movement-unit', `${option.dataset.unit || ''} ${option.dataset.house ? '- ' + option.dataset.house : ''}`.trim());
+            setValue('movement-phone', option.dataset.phone);
+            setValue('movement-class', option.dataset.class);
+            setValue('movement-plate', option.dataset.plate);
+            setValue('movement-model', option.dataset.model);
+            setValue('movement-color', option.dataset.color);
+        });
+    }
+</script>
+{% endblock %}

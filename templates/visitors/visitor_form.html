@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title|default:'Visitor' }} | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h1 class="h3 mb-2">{% if is_resident_user %}Request Visitor{% else %}{{ title|default:'Visitor' }}{% endif %}</h1>
+            <p class="mb-0">Capture the visitor details and, when available, their car or motorcycle details for a smoother gate check-in.</p>
+        </div>
+        <a class="btn btn-light" href="{% url 'visitors:list' %}">Back to Visitors</a>
+    </div>
+</div>
+
+<form method="post" class="soft-card p-4">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="section-title">
+                <span>1</span>
+                <h2 class="h5 mb-0">Personal and Visit Details</h2>
+            </div>
+            {% for field in form %}
+                {% if field.name != 'vehicle_class' and field.name != 'vehicle_plate' and field.name != 'vehicle_make_model' and field.name != 'vehicle_color' %}
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        <div class="col-lg-6">
+            <div class="section-title">
+                <span>2</span>
+                <h2 class="h5 mb-0">Vehicle Details</h2>
+            </div>
+            <p class="text-muted small mb-3">Leave this section blank if the visitor is walking in or has no vehicle.</p>
+            {% for field in form %}
+                {% if field.name == 'vehicle_class' or field.name == 'vehicle_plate' or field.name == 'vehicle_make_model' or field.name == 'vehicle_color' %}
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    <div class="border-top mt-3 pt-3 d-flex justify-content-end gap-2">
+        <a class="btn btn-outline-secondary" href="{% url 'visitors:list' %}">Cancel</a>
+        <button class="btn btn-primary px-4" type="submit">{% if is_resident_user %}Submit Request{% else %}Save Visitor{% endif %}</button>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Gate Handoff | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-kicker">Guard processing</div>
+        <h1 class="h3 page-title">Gate Handoff Screen</h1>
+        <p class="page-subtitle">Search a visitor by name, phone, ID, or plate and continue the correct next action.</p>
+    </div>
+</div>
+
+<form class="filter-card mb-4" method="get">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-10">
+            <label class="form-label" for="handoff-q">Visitor / plate / phone</label>
+            <input class="form-control form-control-lg" id="handoff-q" name="q" value="{{ query }}" placeholder="Scan or search visitor">
+        </div>
+        <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Find</button></div>
+    </div>
+</form>
+
+{% if visitor %}
+    <div class="soft-card p-4">
+        <div class="d-flex flex-wrap justify-content-between gap-3">
+            <div>
+                <h2 class="h4 mb-1">{{ visitor.full_name }}</h2>
+                <p class="text-muted mb-0">{{ visitor.destination|default:'-' }} · {{ visitor.vehicle_plate|default:'No vehicle' }} · {{ visitor.get_status_display }}</p>
+            </div>
+            <a class="btn btn-outline-secondary" href="{% url 'visitors:detail' visitor.pk %}">View Timeline</a>
+        </div>
+        <div class="mt-4">
+            {% if visitor.status == 'APPROVED' %}
+                <form method="post" action="{% url 'visitors:main_gate_checkin' visitor.pk %}">{% csrf_token %}<button class="btn btn-success btn-lg w-100" type="submit">Confirm Main Gate Entry</button></form>
+            {% elif visitor.status == 'ARRIVED_MAIN_GATE' or visitor.status == 'REDIRECTED' %}
+                <form method="post" action="{% url 'visitors:unit_checkin' visitor.pk %}">{% csrf_token %}<button class="btn btn-success btn-lg w-100" type="submit">Confirm Unit Arrival</button></form>
+            {% elif visitor.status == 'UNIT_EXIT_CONFIRMED' %}
+                <form method="post" action="{% url 'visitors:main_gate_checkout' visitor.pk %}">{% csrf_token %}<button class="btn btn-success btn-lg w-100" type="submit">Confirm Final Exit</button></form>
+            {% else %}
+                <div class="alert alert-warning mb-0">No gate action is currently available for this status.</div>
+            {% endif %}
+        </div>
+    </div>
+{% elif query %}
+    <div class="soft-card empty-state">No visitor matched that search.</div>
+{% endif %}
+{% endblock %}

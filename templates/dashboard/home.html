@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-kicker">Live workspace</div>
+        <h1 class="h3 page-title">{% if is_resident_user %}Resident Dashboard{% else %}Security Dashboard{% endif %}</h1>
+        <p class="page-subtitle">{% if is_resident_user %}Book visitors, track arrivals, and confirm check-ins or checkout requests.{% else %}Monitor residents, visitors, vehicles, approvals, and gate movement.{% endif %}</p>
+    </div>
+    {% if is_admin_user or is_security_user %}
+        <a class="btn btn-primary" href="{% url 'traffic_logs:create' %}"><svg class="app-icon"><use href="#icon-plus"></use></svg>Record Entry/Exit</a>
+    {% else %}
+        <a class="btn btn-primary" href="{% url 'visitors:create' %}"><svg class="app-icon"><use href="#icon-plus"></use></svg>Request Visitor</a>
+    {% endif %}
+</div>
+
+<div class="row g-3 mb-4">
+    {% if is_admin_user or is_security_user %}
+        <div class="col-md-2"><div class="card metric-card"><div class="card-body"><div class="icon-badge mb-2"><svg class="app-icon"><use href="#icon-users"></use></svg></div><div class="metric-label">Residents</div><div class="metric-value">{{ resident_count }}</div></div></div></div>
+    {% endif %}
+    <div class="col-md-2"><div class="card metric-card"><div class="card-body"><div class="icon-badge mb-2"><svg class="app-icon"><use href="#icon-visitor"></use></svg></div><div class="metric-label">Visitors</div><div class="metric-value">{{ visitor_count }}</div></div></div></div>
+    <div class="col-md-2"><div class="card metric-card"><div class="card-body"><div class="icon-badge mb-2"><svg class="app-icon"><use href="#icon-task"></use></svg></div><div class="metric-label">Pending</div><div class="metric-value">{{ pending_visitors }}</div></div></div></div>
+    <div class="col-md-2"><div class="card metric-card"><div class="card-body"><div class="icon-badge mb-2"><svg class="app-icon"><use href="#icon-car"></use></svg></div><div class="metric-label">Vehicles</div><div class="metric-value">{{ vehicle_count }}</div></div></div></div>
+    <div class="col-md-2"><div class="card metric-card"><div class="card-body"><div class="icon-badge mb-2"><svg class="app-icon"><use href="#icon-log"></use></svg></div><div class="metric-label">Entries</div><div class="metric-value">{{ entry_count }}</div></div></div></div>
+    <div class="col-md-2"><div class="card metric-card"><div class="card-body"><div class="icon-badge mb-2"><svg class="app-icon"><use href="#icon-log"></use></svg></div><div class="metric-label">Exits</div><div class="metric-value">{{ exit_count }}</div></div></div></div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="soft-card p-3 h-100">
+            <div class="d-flex align-items-center gap-2 mb-2"><div class="icon-badge"><svg class="app-icon"><use href="#icon-calendar"></use></svg></div><strong>Today Arrivals</strong></div>
+            <div class="metric-value">{{ today_arrivals }}</div>
+            <div class="text-muted small">Expected visitors scheduled for today.</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="soft-card p-3 h-100">
+            <div class="d-flex align-items-center gap-2 mb-2"><div class="icon-badge"><svg class="app-icon"><use href="#icon-task"></use></svg></div><strong>Inside Now</strong></div>
+            <div class="metric-value">{{ inside_count }}</div>
+            <div class="text-muted small">Visitors still within the access pipeline.</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="soft-card p-3 h-100">
+            <div class="d-flex align-items-center gap-2 mb-2"><div class="icon-badge"><svg class="app-icon"><use href="#icon-notification"></use></svg></div><strong>Overdue</strong></div>
+            <div class="metric-value">{{ overdue_count }}</div>
+            <div class="text-muted small">Guests past expected departure time.</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="soft-card p-3 h-100">
+            <div class="d-flex align-items-center gap-2 mb-2"><div class="icon-badge"><svg class="app-icon"><use href="#icon-shield"></use></svg></div><strong>Risk Flags</strong></div>
+            <div class="metric-value">{{ incident_count }}</div>
+            <div class="text-muted small">{{ recurring_count }} recurring bookings in the system.</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-4">
+        <div class="soft-card chart-card p-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h2 class="h5 mb-0">Entry vs Exit</h2>
+                <span class="status-pill">Live</span>
+            </div>
+            <div class="chart-bars">
+                {% for item in entry_exit_chart %}
+                    <div class="chart-row">
+                        <span class="small fw-semibold">{{ item.label }}</span>
+                        <div class="chart-track"><div class="chart-fill {{ item.class }}" style="width: {{ item.percent }}%;"></div></div>
+                        <strong>{{ item.total }}</strong>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="soft-card chart-card p-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h2 class="h5 mb-0">Visitor Status</h2>
+                <span class="status-pill">{{ visitor_count }} total</span>
+            </div>
+            <div class="chart-bars">
+                {% for row in status_counts %}
+                    <div class="chart-row">
+                        <span class="small fw-semibold text-truncate">{{ row.label }}</span>
+                        <div class="chart-track"><div class="chart-fill status-{{ row.status|lower }}" style="width: {{ row.percent }}%;"></div></div>
+                        <strong>{{ row.total }}</strong>
+                    </div>
+                {% empty %}
+                    <div class="empty-state"><div class="icon-badge"><svg class="app-icon"><use href="#icon-visitor"></use></svg></div><div>No visitor status data yet.</div></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="soft-card chart-card p-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h2 class="h5 mb-0">Gate Activity</h2>
+                <span class="status-pill">Main gates</span>
+            </div>
+            <div class="chart-bars">
+                {% for row in gate_rows %}
+                    <div class="chart-row">
+                        <span class="small fw-semibold text-truncate">{{ row.label }}</span>
+                        <div class="chart-track"><div class="chart-fill" style="width: {{ row.percent }}%;"></div></div>
+                        <strong>{{ row.total }}</strong>
+                    </div>
+                {% empty %}
+                    <div class="empty-state"><div class="icon-badge"><svg class="app-icon"><use href="#icon-home"></use></svg></div><div>No gate activity yet.</div></div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h5 mb-0">{% if is_resident_user %}Main Gate Requests Awaiting You{% else %}Pending Visitor Approvals{% endif %}</h2>
+        </div>
+        <div class="data-card">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Visitor</th><th>Vehicle</th><th>Purpose</th><th>Status</th><th></th></tr></thead>
+                    <tbody>
+                    {% for visitor in pending_approvals %}
+                        <tr>
+                            <td>{{ visitor.full_name }}<br><span class="text-muted">{{ visitor.phone }}</span></td>
+                            <td>{{ visitor.vehicle_plate|default:'-' }}<br><span class="text-muted">{{ visitor.get_vehicle_class_display }} {{ visitor.vehicle_color }} {{ visitor.vehicle_make_model }}</span></td>
+                            <td>{{ visitor.purpose }}</td>
+                            <td><span class="badge text-bg-warning">{{ visitor.get_status_display }}</span></td>
+                            <td class="text-end">
+                                {% if is_admin_user or is_resident_user %}
+                                    <form method="post" action="{% url 'visitors:approve' visitor.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                                    </form>
+                                    <form method="post" action="{% url 'visitors:deny' visitor.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Deny</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5"><div class="empty-state"><div class="icon-badge"><svg class="app-icon"><use href="#icon-task"></use></svg></div><div>{% if is_resident_user %}No main gate requests need your approval.{% else %}No pending approvals.{% endif %}</div></div></td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h5 mb-0">{% if is_resident_user %}Recent Visitor Movement{% else %}Recent Gate Logs{% endif %}</h2>
+            {% if is_admin_user or is_security_user %}
+                <a href="{% url 'traffic_logs:list' %}">View all</a>
+            {% endif %}
+        </div>
+        <div class="data-card">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Time</th><th>Visitor</th><th>Vehicle</th><th>Movement</th><th>Main Gate Exit</th></tr></thead>
+                    <tbody>
+                    {% for log in recent_logs %}
+                        <tr>
+                            <td>{{ log.recorded_at|date:"M d, H:i" }}</td>
+                            <td>
+                                {{ log.visitor.full_name|default:'-' }}
+                                {% if log.visitor %}
+                                    <br><span class="text-muted">{{ log.visitor.phone }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.visitor and log.visitor.vehicle_plate %}
+                                    {{ log.visitor.vehicle_plate }}<br><span class="text-muted">{{ log.visitor.get_vehicle_class_display }} {{ log.visitor.vehicle_color }} {{ log.visitor.vehicle_make_model }}</span>
+                                {% elif log.vehicle %}
+                                    {{ log.vehicle.plate_number }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ log.get_direction_display }} at {{ log.get_checkpoint_type_display }}<br>
+                                <span class="text-muted">{{ log.get_gate_display }}{% if log.community_unit %} · {{ log.community_unit }}{% endif %}</span>
+                            </td>
+                            <td>
+                                {% if log.checkpoint_type == 'MAIN_GATE' and log.direction == 'EXIT' and log.visitor.status == 'CHECKED_OUT' %}
+                                    <span class="badge text-bg-success">Confirmed</span>
+                                {% elif log.visitor.status == 'CHECKOUT_REQUESTED' %}
+                                    <span class="badge text-bg-warning">Awaiting main gate</span>
+                                {% elif log.visitor %}
+                                    <span class="badge text-bg-secondary">{{ log.visitor.get_status_display }}</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5"><div class="empty-state"><div class="icon-badge"><svg class="app-icon"><use href="#icon-log"></use></svg></div><div>No visitor movement recorded yet.</div></div></td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Visitors | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-kicker">Visitor flow</div>
+        <h1 class="h3 page-title">Visitors</h1>
+        <p class="page-subtitle">Track requests, approvals, arrivals, redirections, and final exits.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'visitors:create' %}"><svg class="app-icon"><use href="#icon-plus"></use></svg>Add Visitor</a>
+</div>
+<form method="get" class="filter-card mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label" for="visitor-search">Search</label>
+            <input class="form-control" id="visitor-search" type="search" name="q" value="{{ query }}" placeholder="Name, ID, phone, host, plate">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="visitor-status">Status</label>
+            <select class="form-select" id="visitor-status" name="status">
+                <option value="">All</option>
+                {% for value, label in statuses %}
+                    <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="guest-type">Type</label>
+            <select class="form-select" id="guest-type" name="guest_type">
+                <option value="">All</option>
+                {% for value, label in guest_types %}
+                    <option value="{{ value }}" {% if guest_type == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="destination">Destination</label>
+            <select class="form-select" id="destination" name="destination">
+                <option value="">All</option>
+                {% for unit in destinations %}
+                    <option value="{{ unit.pk }}" {% if destination == unit.pk|stringformat:'s' %}selected{% endif %}>{{ unit.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-outline-primary w-100" type="submit"><svg class="app-icon"><use href="#icon-filter"></use></svg>Filter</button>
+        </div>
+    </div>
+</form>
+<div class="data-card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead><tr><th>Name</th><th>Type</th><th>ID/Phone</th><th>Host</th><th>Destination</th><th>Vehicle</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            {% for visitor in visitors %}
+                <tr>
+                    <td>{{ visitor.full_name }}</td>
+                    <td>{{ visitor.get_guest_type_display }}</td>
+                    <td>{{ visitor.id_number }}<br><span class="text-muted">{{ visitor.phone }}</span></td>
+                    <td>{{ visitor.host.full_name }}<br><span class="text-muted">{{ visitor.host.house_number }}</span></td>
+                    <td>{{ visitor.destination|default:'-' }}<br><span class="text-muted">{{ visitor.get_main_gate_display|default:'' }}</span></td>
+                    <td>{{ visitor.vehicle_plate|default:'-' }}<br><span class="text-muted">{{ visitor.get_vehicle_class_display }} {{ visitor.vehicle_color }} {{ visitor.vehicle_make_model }}</span></td>
+                    <td><span class="status-pill status-{{ visitor.status|lower }}">{{ visitor.get_status_display }}</span></td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'visitors:detail' visitor.pk %}">Timeline</a>
+                        {% if is_admin_user or is_security_user %}
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'visitors:edit' visitor.pk %}">Edit</a>
+                        {% elif visitor.status == 'PENDING' and is_resident_user %}
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'visitors:edit' visitor.pk %}">Edit</a>
+                        {% endif %}
+
+                        {% if is_admin_user and visitor.status == 'PENDING' or is_main_gate_guard_user and visitor.status == 'PENDING' %}
+                            <form method="post" action="{% url 'visitors:alert_host' visitor.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-warning" type="submit">Alert Host</button>
+                            </form>
+                        {% endif %}
+                        {% if visitor.status == 'PENDING' and is_admin_user or visitor.status == 'PENDING' and is_resident_user %}
+                            <form method="post" action="{% url 'visitors:approve' visitor.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                            </form>
+                            <form method="post" action="{% url 'visitors:deny' visitor.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Deny</button>
+                            </form>
+                        {% endif %}
+                        {% if is_admin_user and visitor.status == 'APPROVED' or is_main_gate_guard_user and visitor.status == 'APPROVED' %}
+                            <form method="post" action="{% url 'visitors:main_gate_checkin' visitor.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-success" type="submit">Main Gate In</button>
+                            </form>
+                        {% endif %}
+                        {% if is_admin_user and visitor.status == 'ARRIVED_MAIN_GATE' or is_admin_user and visitor.status == 'REDIRECTED' or is_unit_guard_user and visitor.status == 'ARRIVED_MAIN_GATE' or is_unit_guard_user and visitor.status == 'REDIRECTED' %}
+                            <form method="post" action="{% url 'visitors:unit_checkin' visitor.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-success" type="submit">Unit Arrived</button>
+                            </form>
+                        {% endif %}
+                        {% if is_admin_user and visitor.status == 'UNIT_CONFIRMED' or is_resident_user and visitor.status == 'UNIT_CONFIRMED' %}
+                            <form method="post" action="{% url 'visitors:confirm_checkin' visitor.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-success" type="submit">Confirm In</button>
+                            </form>
+                        {% endif %}
+                        {% if is_admin_user and visitor.status == 'CHECKED_IN' or is_resident_user and visitor.status == 'CHECKED_IN' %}
+                            <form method="post" action="{% url 'visitors:request_checkout' visitor.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-outline-success" type="submit">Request Out</button>
+                            </form>
+                        {% endif %}
+                        {% if is_admin_user and visitor.status == 'CHECKOUT_REQUESTED' or is_main_gate_guard_user and visitor.status == 'CHECKOUT_REQUESTED' %}
+                            <form method="post" action="{% url 'visitors:main_gate_checkout' visitor.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-outline-success" type="submit">Confirm Exit</button>
+                            </form>
+                        {% endif %}
+                        {% if is_admin_user and destinations or is_unit_guard_user and destinations %}
+                            <form method="post" action="{% url 'visitors:redirect' visitor.pk %}" class="d-inline-block mt-1">
+                                {% csrf_token %}
+                                <select class="form-select form-select-sm d-inline-block w-auto" name="destination">
+                                    {% for unit in destinations %}
+                                        <option value="{{ unit.pk }}" {% if visitor.destination_id == unit.pk %}selected{% endif %}>{{ unit.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button class="btn btn-sm btn-outline-secondary" type="submit">Redirect</button>
+                            </form>
+                        {% endif %}
+                        {% if is_admin_user or visitor.status == 'PENDING' and is_resident_user or visitor.status == 'APPROVED' and is_resident_user %}
+                            <form method="post" action="{% url 'visitors:delete' visitor.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="8"><div class="empty-state">No visitors found.</div></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

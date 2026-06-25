@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Developments | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-kicker">Admin master list</div>
+        <h1 class="h3 page-title">Developments</h1>
+        <p class="page-subtitle">Add and manage residential areas and companies within the Tilisi community.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'residents:development_create' %}"><svg class="app-icon"><use href="#icon-plus"></use></svg>Add Development</a>
+</div>
+
+<form method="get" class="filter-card mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label" for="development-search">Search</label>
+            <input class="form-control" id="development-search" type="search" name="q" value="{{ query }}" placeholder="Development name or phone">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="development-type">Type</label>
+            <select class="form-select" id="development-type" name="type">
+                <option value="">All</option>
+                {% for value, label in unit_types %}
+                    <option value="{{ value }}" {% if unit_type == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="development-status">Status</label>
+            <select class="form-select" id="development-status" name="status">
+                <option value="">All</option>
+                <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-outline-primary w-100" type="submit"><svg class="app-icon"><use href="#icon-filter"></use></svg>Filter</button>
+        </div>
+    </div>
+</form>
+
+<div class="data-card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr><th>Name</th><th>Type</th><th>Contact Phone</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+            {% for development in developments %}
+                <tr>
+                    <td>{{ development.name }}</td>
+                    <td>{{ development.get_unit_type_display }}</td>
+                    <td>{{ development.contact_phone|default:'-' }}</td>
+                    <td>{% if development.is_active %}<span class="badge text-bg-success">Active</span>{% else %}<span class="badge text-bg-secondary">Inactive</span>{% endif %}</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary" href="{% url 'residents:development_edit' development.pk %}">Edit</a>
+                        <form method="post" action="{% url 'residents:development_delete' development.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-outline-danger" type="submit">Deactivate</button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5"><div class="empty-state">No developments found.</div></td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

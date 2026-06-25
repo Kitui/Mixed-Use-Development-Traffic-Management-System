@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-kicker">System settings</div>
+        <h1 class="h3 page-title">Portal Settings</h1>
+        <p class="page-subtitle">Tune the prototype branding, alerts, security rules, reports, and visitor requirements.</p>
+    </div>
+</div>
+
+<form method="post" class="form-shell">
+    {% csrf_token %}
+    <div class="form-shell-header">
+        <p class="text-uppercase small fw-semibold mb-2">Tilisi access control</p>
+        <h2 class="h4 mb-2">{{ settings_obj.estate_name }}</h2>
+        <p>These settings are stored in the database and can be adjusted during demos.</p>
+    </div>
+    <div class="form-shell-body">
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="form-panel">
+                    <div class="setting-group-title mb-3">Branding</div>
+                    <div class="mb-3"><label class="form-label" for="{{ form.estate_name.id_for_label }}">Estate / portal name</label>{{ form.estate_name }}{{ form.estate_name.errors }}</div>
+                    <div class="mb-3"><label class="form-label" for="{{ form.logo_url.id_for_label }}">Logo URL</label>{{ form.logo_url }}{{ form.logo_url.errors }}</div>
+                    <div class="mb-3"><label class="form-label" for="{{ form.default_theme.id_for_label }}">Default theme</label>{{ form.default_theme }}{{ form.default_theme.errors }}</div>
+                    <div class="form-check form-switch">{{ form.compact_mode }} <label class="form-check-label" for="{{ form.compact_mode.id_for_label }}">Compact mode</label></div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="form-panel">
+                    <div class="setting-group-title mb-3">Contact & Time</div>
+                    <div class="mb-3"><label class="form-label" for="{{ form.contact_phone.id_for_label }}">Security contact phone</label>{{ form.contact_phone }}{{ form.contact_phone.errors }}</div>
+                    <div class="mb-3"><label class="form-label" for="{{ form.contact_email.id_for_label }}">Security email</label>{{ form.contact_email }}{{ form.contact_email.errors }}</div>
+                    <div class="mb-3"><label class="form-label" for="{{ form.timezone_name.id_for_label }}">Timezone</label>{{ form.timezone_name }}{{ form.timezone_name.errors }}</div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="form-panel">
+                    <div class="setting-group-title mb-3">Visitor Rules</div>
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label" for="{{ form.max_visit_hours.id_for_label }}">Max visit hours</label>{{ form.max_visit_hours }}{{ form.max_visit_hours.errors }}</div>
+                        <div class="col-md-6"><label class="form-label" for="{{ form.default_report_days.id_for_label }}">Default report days</label>{{ form.default_report_days }}{{ form.default_report_days.errors }}</div>
+                    </div>
+                    <div class="form-check form-switch mt-3">{{ form.require_visitor_id }} <label class="form-check-label" for="{{ form.require_visitor_id.id_for_label }}">Require visitor ID/passport</label></div>
+                    <div class="form-check form-switch mt-2">{{ form.require_vehicle_details }} <label class="form-check-label" for="{{ form.require_vehicle_details.id_for_label }}">Require vehicle details when visitor has a vehicle</label></div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="form-panel">
+                    <div class="setting-group-title mb-3">Alerts & Security</div>
+                    <div class="mb-3"><label class="form-label" for="{{ form.session_timeout_minutes.id_for_label }}">Session timeout minutes</label>{{ form.session_timeout_minutes }}{{ form.session_timeout_minutes.errors }}</div>
+                    <div class="form-check form-switch">{{ form.sms_simulation_enabled }} <label class="form-check-label" for="{{ form.sms_simulation_enabled.id_for_label }}">Enable SMS simulation</label></div>
+                    <div class="form-check form-switch mt-2">{{ form.email_simulation_enabled }} <label class="form-check-label" for="{{ form.email_simulation_enabled.id_for_label }}">Enable email simulation</label></div>
+                    <div class="form-check form-switch mt-2">{{ form.failed_login_warning }} <label class="form-check-label" for="{{ form.failed_login_warning.id_for_label }}">Show failed-login warning</label></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="form-actions">
+        <a class="btn btn-outline-secondary" href="{% url 'dashboard:home' %}">Cancel</a>
+        <button class="btn btn-primary" type="submit">Save Settings</button>
+    </div>
+</form>
+{% endblock %}

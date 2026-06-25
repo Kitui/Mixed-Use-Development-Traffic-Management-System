@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Workflow Board | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-kicker">Workflow board</div>
+        <h1 class="h3 page-title">Visitor Status Board</h1>
+        <p class="page-subtitle">Track every visitor across the full estate access pipeline.</p>
+    </div>
+</div>
+
+<div class="d-flex gap-3 overflow-auto pb-3">
+    {% for column in board %}
+        <div class="soft-card p-3" style="min-width: 280px;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h6 mb-0">{{ column.label }}</h2>
+                <span class="status-pill status-{{ column.status|lower }}">{{ column.visitors|length }}</span>
+            </div>
+            <div class="d-grid gap-2">
+                {% for visitor in column.visitors %}
+                    <a class="task-card text-decoration-none text-dark" href="{% url 'visitors:detail' visitor.pk %}">
+                        <strong>{{ visitor.full_name }}</strong>
+                        {% if visitor.is_overdue %}<span class="badge text-bg-danger ms-1">Overdue</span>{% endif %}
+                        {% if visitor.incident_flagged %}<span class="badge text-bg-warning ms-1">Incident</span>{% endif %}
+                        <div class="small text-muted">{{ visitor.destination|default:'-' }} · {{ visitor.vehicle_plate|default:'No vehicle' }}</div>
+                    </a>
+                {% empty %}
+                    <div class="empty-state p-3">Empty</div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

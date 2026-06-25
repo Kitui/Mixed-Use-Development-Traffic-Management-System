@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Bulk Import | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-kicker">Admin tools</div>
+        <h1 class="h3 page-title">Bulk Import</h1>
+        <p class="page-subtitle">{% if company_unit %}Upload employees and company vehicles for {{ company_unit }}.{% else %}Upload CSV files for residents/employees or registered vehicles.{% endif %}</p>
+    </div>
+</div>
+
+{% if result %}<div class="alert alert-success">{{ result }}</div>{% endif %}
+<form class="form-shell" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="form-shell-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label" for="target">Import type</label>
+                <select class="form-select" id="target" name="target">
+                    <option value="residents">{% if company_unit %}Employees{% else %}Residents / Employees{% endif %}</option>
+                    <option value="vehicles">{% if company_unit %}Company Vehicles{% else %}Vehicles{% endif %}</option>
+                </select>
+            </div>
+            <div class="col-md-8">
+                <label class="form-label" for="csv-file">CSV file</label>
+                <input class="form-control" id="csv-file" type="file" name="csv_file" accept=".csv" required>
+            </div>
+        </div>
+        <p class="form-help-text mt-3 mb-0">{% if company_unit %}Employee columns: full_name, house_number, phone, email. Vehicle columns: plate_number, house_number, vehicle_class, make_model, color. Imports are automatically assigned to {{ company_unit }}.{% else %}Residents columns: full_name, house_number, phone, email, community_unit. Vehicles columns: plate_number, house_number, vehicle_class, make_model, color.{% endif %}</p>
+    </div>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">Import CSV</button></div>
+</form>
+{% endblock %}

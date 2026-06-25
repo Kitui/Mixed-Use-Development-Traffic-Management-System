@@ -1,0 +1,417 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login | Tilisi Estate Traffic{% endblock %}
+
+{% block content %}
+<style>
+    .tilisi-nav {
+        display: none;
+    }
+
+    .app-main {
+        margin-left: 0;
+        max-width: none;
+        padding: 0;
+    }
+
+    .login-page {
+        background:
+            radial-gradient(circle at 18% 20%, rgba(199, 163, 66, .22), transparent 24%),
+            radial-gradient(circle at 90% 10%, rgba(64, 151, 86, .2), transparent 28%),
+            linear-gradient(135deg, #0f2e23 0%, #17221d 52%, #eef2f7 52%, #f8fafc 100%);
+        display: grid;
+        min-height: 100vh;
+        place-items: center;
+        padding: 32px 18px;
+    }
+
+    .login-shell {
+        display: grid;
+        grid-template-columns: minmax(280px, .85fr) minmax(320px, 1fr);
+        max-width: 1080px;
+        overflow: hidden;
+        width: 100%;
+    }
+
+    .login-story {
+        background:
+            linear-gradient(180deg, rgba(17, 63, 42, .88), rgba(23, 34, 29, .94)),
+            url("{% get_static_prefix %}accounts/img/tilisi-logo.png") center 58% / 68% no-repeat;
+        border-radius: 8px 0 0 8px;
+        color: #fff;
+        min-height: 620px;
+        padding: 34px;
+        position: relative;
+    }
+
+    .login-story::after {
+        background: linear-gradient(90deg, #c7a342, #7ab800, #1f7a4d);
+        border-radius: 999px;
+        bottom: 34px;
+        content: "";
+        height: 5px;
+        left: 34px;
+        position: absolute;
+        width: 180px;
+    }
+
+    .brand-lockup {
+        align-items: center;
+        display: flex;
+        gap: 14px;
+    }
+
+    .brand-lockup img {
+        background: rgba(255, 255, 255, .92);
+        border-radius: 8px;
+        max-width: 118px;
+        padding: 10px;
+    }
+
+    .brand-lockup span {
+        color: rgba(255, 255, 255, .7);
+        display: block;
+        font-size: .82rem;
+        text-transform: uppercase;
+    }
+
+    .login-story h1 {
+        font-size: clamp(2rem, 4vw, 3.4rem);
+        font-weight: 800;
+        letter-spacing: 0;
+        line-height: 1.05;
+        margin: 72px 0 16px;
+        max-width: 440px;
+    }
+
+    .login-story p {
+        color: rgba(255, 255, 255, .78);
+        font-size: 1rem;
+        line-height: 1.7;
+        max-width: 420px;
+    }
+
+    .login-feature-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 34px;
+    }
+
+    .login-feature {
+        align-items: center;
+        background: rgba(255, 255, 255, .08);
+        border: 1px solid rgba(255, 255, 255, .12);
+        border-radius: 8px;
+        display: flex;
+        gap: 12px;
+        padding: 12px 14px;
+    }
+
+    .login-feature span {
+        background: rgba(199, 163, 66, .22);
+        border-radius: 999px;
+        color: #f5d36f;
+        display: inline-grid;
+        flex: 0 0 30px;
+        font-weight: 800;
+        height: 30px;
+        place-items: center;
+        width: 30px;
+    }
+
+    .login-card {
+        background: rgba(255, 255, 255, .96);
+        border: 1px solid rgba(217, 226, 236, .9);
+        border-radius: 0 8px 8px 0;
+        box-shadow: 0 22px 55px rgba(15, 23, 42, .18);
+        padding: 42px;
+    }
+
+    .login-card-header {
+        margin-bottom: 28px;
+    }
+
+    .login-eyebrow {
+        color: #1f7a4d;
+        font-size: .78rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+
+    .login-card h2 {
+        color: #0f172a;
+        font-size: 2rem;
+        font-weight: 800;
+        margin: 6px 0 8px;
+    }
+
+    .login-card p {
+        color: #64748b;
+        margin: 0;
+    }
+
+    .login-field {
+        margin-bottom: 16px;
+    }
+
+    .login-field label {
+        color: #334155;
+        font-weight: 700;
+        margin-bottom: 7px;
+    }
+
+    .login-field input {
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        min-height: 48px;
+        padding: 12px 44px 12px 14px;
+        transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+        width: 100%;
+    }
+
+    .login-field input:focus {
+        background: #fff;
+        border-color: #1f7a4d;
+        box-shadow: 0 0 0 4px rgba(31, 122, 77, .14);
+        outline: none;
+    }
+
+    .password-wrap {
+        position: relative;
+    }
+
+    .password-toggle {
+        background: transparent;
+        border: 0;
+        color: #1f7a4d;
+        font-weight: 800;
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .login-actions {
+        display: grid;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .btn-login {
+        background: linear-gradient(135deg, #1f7a4d, #17613d);
+        border: 0;
+        border-radius: 8px;
+        box-shadow: 0 12px 24px rgba(31, 122, 77, .24);
+        color: #fff;
+        font-weight: 800;
+        min-height: 50px;
+        transition: transform .16s ease, box-shadow .16s ease;
+    }
+
+    .btn-login:hover {
+        box-shadow: 0 16px 28px rgba(31, 122, 77, .32);
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .forgot-line {
+        color: #64748b;
+        font-size: .92rem;
+        text-align: center;
+    }
+
+    .forgot-line a {
+        color: #1f7a4d;
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    .quick-access {
+        border-top: 1px solid #e2e8f0;
+        margin-top: 28px;
+        padding-top: 22px;
+    }
+
+    .quick-access-title {
+        color: #334155;
+        font-size: .9rem;
+        font-weight: 800;
+        margin-bottom: 12px;
+    }
+
+    .quick-buttons {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .quick-login {
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        color: #17221d;
+        font-weight: 800;
+        padding: 11px 12px;
+        transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+    }
+
+    .quick-login:hover {
+        background: #e9f5ef;
+        border-color: #1f7a4d;
+        color: #113f2a;
+        transform: translateY(-1px);
+    }
+
+    .quick-login.is-loading {
+        background: #1f7a4d;
+        border-color: #1f7a4d;
+        color: #fff;
+        pointer-events: none;
+    }
+
+    .login-footer {
+        color: #64748b;
+        font-size: .88rem;
+        margin-top: 28px;
+        text-align: center;
+    }
+
+    .alert-error {
+        background: #fff1f0;
+        border: 1px solid #ffccc7;
+        border-radius: 8px;
+        color: #a8071a;
+        margin-bottom: 18px;
+        padding: 12px 14px;
+    }
+
+    @media (max-width: 900px) {
+        .login-page {
+            background: linear-gradient(180deg, #0f2e23 0%, #17221d 36%, #eef2f7 36%, #f8fafc 100%);
+        }
+
+        .login-shell {
+            grid-template-columns: 1fr;
+            max-width: 560px;
+        }
+
+        .login-story {
+            border-radius: 8px 8px 0 0;
+            min-height: auto;
+            padding: 28px;
+        }
+
+        .login-story h1 {
+            margin-top: 34px;
+        }
+
+        .login-card {
+            border-radius: 0 0 8px 8px;
+            padding: 30px 22px;
+        }
+    }
+</style>
+
+<section class="login-page">
+    <div class="login-shell">
+        <aside class="login-story">
+            <div class="brand-lockup">
+                <img src="{% get_static_prefix %}accounts/img/tilisi-logo.png" alt="Tilisi logo">
+                <div>
+                    <strong>Tilisi</strong>
+                    <span>Inspire | Invest | Imagine</span>
+                </div>
+            </div>
+            <h1>Smart access for every gate.</h1>
+            <p>Manage residents, visitors, vehicles, unit confirmations, and gate exits from one coordinated traffic desk.</p>
+            <div class="login-feature-list">
+                <div class="login-feature"><span>1</span> Main gate visitor and vehicle entry control</div>
+                <div class="login-feature"><span>2</span> Unit guard arrival and exit confirmation queues</div>
+                <div class="login-feature"><span>3</span> Resident and company visitor approvals</div>
+            </div>
+        </aside>
+
+        <div class="login-card">
+            <div class="login-card-header">
+                <div class="login-eyebrow">Estate Traffic Portal</div>
+                <h2>Welcome back</h2>
+                <p>Sign in to continue managing Tilisi community movement.</p>
+            </div>
+
+            {% if form.errors %}
+                <div class="alert-error">Please check your username and password, then try again.</div>
+            {% endif %}
+
+            <form method="post" id="login-form">
+                {% csrf_token %}
+                <div class="login-field">
+                    <label for="{{ form.username.id_for_label }}">Username</label>
+                    {{ form.username }}
+                </div>
+                <div class="login-field">
+                    <label for="{{ form.password.id_for_label }}">Password</label>
+                    <div class="password-wrap">
+                        {{ form.password }}
+                        <button class="password-toggle" type="button" data-password-toggle>Show</button>
+                    </div>
+                </div>
+
+                <div class="login-actions">
+                    <button class="btn btn-login" type="submit">Sign In Securely</button>
+                    <div class="forgot-line">
+                        Forgot password? <a href="#" data-forgot-password>Contact the system admin</a>
+                    </div>
+                </div>
+            </form>
+
+            <div class="quick-access">
+                <div class="quick-access-title">Prototype quick access</div>
+                <div class="quick-buttons">
+                    <button class="quick-login" type="button" data-user="admin" data-pass="admin12345">Admin</button>
+                    <button class="quick-login" type="button" data-user="guard" data-pass="guard12345">Main Gate</button>
+                    <button class="quick-login" type="button" data-user="unitguard" data-pass="unitguard12345">Unit Guard</button>
+                    <button class="quick-login" type="button" data-user="resident" data-pass="resident12345">Resident</button>
+                    <button class="quick-login" type="button" data-user="reception" data-pass="reception12345">Company</button>
+                </div>
+            </div>
+
+            <div class="login-footer">
+                &copy; {% now "Y" %} Tilisi Estate Traffic Management System. All rights reserved.
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    const usernameInput = document.querySelector('#id_username');
+    const passwordInput = document.querySelector('#id_password');
+    const loginForm = document.querySelector('#login-form');
+    const toggleButton = document.querySelector('[data-password-toggle]');
+
+    document.querySelectorAll('.quick-login').forEach((button) => {
+        button.addEventListener('click', () => {
+            usernameInput.value = button.dataset.user;
+            passwordInput.value = button.dataset.pass;
+            usernameInput.dispatchEvent(new Event('input', { bubbles: true }));
+            passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
+            button.classList.add('is-loading');
+            button.textContent = 'Signing in...';
+            window.setTimeout(() => loginForm.submit(), 180);
+        });
+    });
+
+    toggleButton.addEventListener('click', () => {
+        const isHidden = passwordInput.type === 'password';
+        passwordInput.type = isHidden ? 'text' : 'password';
+        toggleButton.textContent = isHidden ? 'Hide' : 'Show';
+    });
+
+    document.querySelector('[data-forgot-password]').addEventListener('click', (event) => {
+        event.preventDefault();
+        alert('For this prototype, password resets are handled by the estate system administrator.');
+    });
+</script>
+{% endblock %}

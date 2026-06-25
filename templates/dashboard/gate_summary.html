@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Gate Summary | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-kicker">Gate map</div>
+        <h1 class="h3 page-title">Main Gate Summary</h1>
+        <p class="page-subtitle">Visual overview of activity at Chunga Mali, Nairobi-Nakuru, and Limuru Road gates.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for gate in gates %}
+        <div class="col-lg-4">
+            <div class="task-card">
+                <div class="icon-badge mb-3"><svg class="app-icon"><use href="#icon-home"></use></svg></div>
+                <h2 class="h5">{{ gate.label }}</h2>
+                <div class="row g-2 mt-3">
+                    <div class="col-4"><div class="metric-label">Entries</div><div class="metric-value">{{ gate.entries }}</div></div>
+                    <div class="col-4"><div class="metric-label">Exits</div><div class="metric-value">{{ gate.exits }}</div></div>
+                    <div class="col-4"><div class="metric-label">Waiting</div><div class="metric-value">{{ gate.waiting }}</div></div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

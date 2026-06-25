@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+
+{% block title %}Main Gate Tasks | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h1 class="h3 mb-2">Main Gate Tasks</h1>
+            <p class="mb-0">Record resident and employee movement at the community gates and confirm visitors leaving Tilisi.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge text-bg-light">{{ approved_count }} visitor arrivals</span>
+            <span class="badge text-bg-warning">{{ released_count }} visitor exits waiting</span>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12">
+        <div class="section-title">
+            <span>1</span>
+            <h2 class="h5 mb-0">Resident / Employee Community Movement</h2>
+        </div>
+        <form method="post" action="{% url 'dashboard:record_gate_movement' %}" class="task-card" id="gate-movement-form">
+            {% csrf_token %}
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-6">
+                    <label class="form-label" for="gate-vehicle-select">Registered car or motorcycle</label>
+                    <select class="form-select" id="gate-vehicle-select" name="vehicle" required>
+                        <option value="">Select from admin master list</option>
+                        {% for vehicle in registered_vehicles %}
+                            <option
+                                value="{{ vehicle.pk }}"
+                                data-owner="{{ vehicle.resident_owner.full_name }}"
+                                data-phone="{{ vehicle.resident_owner.phone }}"
+                                data-unit="{{ vehicle.resident_owner.community_unit|default:'-' }}"
+                                data-house="{{ vehicle.resident_owner.house_number }}"
+                                data-class="{{ vehicle.get_vehicle_class_display }}"
+                                data-plate="{{ vehicle.plate_number }}"
+                                data-model="{{ vehicle.make_model|default:'-' }}"
+                                data-color="{{ vehicle.color|default:'-' }}"
+                            >
+                                {{ vehicle.plate_number }} - {{ vehicle.resident_owner.full_name }} ({{ vehicle.get_vehicle_class_display }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-lg-3">
+                    <label class="form-label" for="gate-direction">Movement</label>
+                    <select class="form-select" id="gate-direction" name="direction" required>
+                        <option value="ENTRY">Community Entry</option>
+                        <option value="EXIT">Community Exit</option>
+                    </select>
+                </div>
+                <div class="col-lg-3">
+                    <button class="btn btn-success w-100" type="submit">Save</button>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-3">
+                <div class="col-md-4">
+                    <label class="form-label">Resident / Employee</label>
+                    <input class="form-control" id="gate-owner" type="text" readonly placeholder="Auto-filled after selection">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Unit and House/Office</label>
+                    <input class="form-control" id="gate-unit" type="text" readonly placeholder="Auto-filled after selection">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Phone</label>
+                    <input class="form-control" id="gate-phone" type="text" readonly placeholder="Auto-filled after selection">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Vehicle Type</label>
+                    <input class="form-control" id="gate-class" type="text" readonly>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Plate</label>
+                    <input class="form-control" id="gate-plate" type="text" readonly>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Model</label>
+                    <input class="form-control" id="gate-model" type="text" readonly>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Color</label>
+                    <input class="form-control" id="gate-color" type="text" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="gate-select">Gate name</label>
+                    <select class="form-select" id="gate-select" name="gate" required>
+                        <option value="">Select gate independently</option>
+                        {% for value, label in movement_form.fields.gate.choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-12">
+        <div class="section-title">
+            <span>2</span>
+            <h2 class="h5 mb-0">Request Visitor Approval</h2>
+        </div>
+        <form method="post" action="{% url 'dashboard:create_gate_visitor_request' %}" class="task-card">
+            {% csrf_token %}
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <h3 class="h6 mb-3">Visitor Details</h3>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ visitor_request_form.guest_type.id_for_label }}">Guest type</label>
+                            {{ visitor_request_form.guest_type }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ visitor_request_form.main_gate.id_for_label }}">Gate</label>
+                            {{ visitor_request_form.main_gate }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ visitor_request_form.full_name.id_for_label }}">Full name</label>
+                            {{ visitor_request_form.full_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ visitor_request_form.id_number.id_for_label }}">ID/passport number</label>
+                            {{ visitor_request_form.id_number }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ visitor_request_form.phone.id_for_label }}">Phone</label>
+                            {{ visitor_request_form.phone }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ visitor_request_form.company_name.id_for_label }}">Company/service provider</label>
+                            {{ visitor_request_form.company_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ visitor_request_form.host.id_for_label }}">Resident / company contact</label>
+                            {{ visitor_request_form.host }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ visitor_request_form.destination.id_for_label }}">Destination</label>
+                            {{ visitor_request_form.destination }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="{{ visitor_request_form.purpose.id_for_label }}">Purpose</label>
+                            {{ visitor_request_form.purpose }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <h3 class="h6 mb-3">Vehicle Details</h3>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ visitor_request_form.vehicle_class.id_for_label }}">Class</label>
+                            {{ visitor_request_form.vehicle_class }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="{{ visitor_request_form.vehicle_plate.id_for_label }}">Plate</label>
+                            {{ visitor_request_form.vehicle_plate }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="{{ visitor_request_form.vehicle_make_model.id_for_label }}">Make/model</label>
+                            {{ visitor_request_form.vehicle_make_model }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="{{ visitor_request_form.vehicle_color.id_for_label }}">Color</label>
+                            {{ visitor_request_form.vehicle_color }}
+                        </div>
+                    </div>
+                    <div class="alert alert-warning mt-4 mb-0">
+                        This request will be marked pending and sent to the resident/company contact for approval.
+                    </div>
+                </div>
+            </div>
+            <div class="border-top mt-4 pt-3 text-end">
+                <button class="btn btn-success px-4" type="submit">Submit for Approval</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="section-title">
+            <span>3</span>
+            <h2 class="h5 mb-0">Visitor Arrival Queue</h2>
+        </div>
+        <div class="d-grid gap-3">
+            {% for visitor in approved_visitors %}
+                <div class="task-card">
+                    <div class="d-flex justify-content-between gap-3">
+                        <div>
+                            <h3 class="h6 mb-1">{{ visitor.full_name }}</h3>
+                            <div class="text-muted small">{{ visitor.destination|default:'Unassigned destination' }} · {{ visitor.get_guest_type_display }}</div>
+                        </div>
+                        <span class="status-pill">{{ visitor.get_status_display }}</span>
+                    </div>
+                    <div class="row mt-3 small">
+                        <div class="col-md-3"><strong>Phone:</strong> {{ visitor.phone }}</div>
+                        <div class="col-md-3"><strong>Vehicle:</strong> {{ visitor.vehicle_plate|default:'-' }}</div>
+                        <div class="col-md-3"><strong>Host:</strong> {{ visitor.host.full_name }}</div>
+                        <div class="col-md-3"><strong>Purpose:</strong> {{ visitor.purpose }}</div>
+                    </div>
+                    <form method="post" action="{% url 'visitors:main_gate_checkin' visitor.pk %}" class="mt-3">
+                        {% csrf_token %}
+                        <button class="btn btn-success btn-sm" type="submit">Confirm Visitor Entered Community</button>
+                    </form>
+                </div>
+            {% empty %}
+                <div class="soft-card p-4 text-muted">No approved visitors are waiting at the main gate.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="section-title">
+            <span>4</span>
+            <h2 class="h5 mb-0">Visitor Final Exit Queue</h2>
+        </div>
+        <div class="d-grid gap-3">
+            {% for visitor in released_visitors %}
+                <div class="task-card">
+                    <div class="d-flex justify-content-between gap-3">
+                        <div>
+                            <h3 class="h6 mb-1">{{ visitor.full_name }}</h3>
+                            <div class="text-muted small">{{ visitor.destination|default:'Unassigned destination' }} · {{ visitor.get_guest_type_display }}</div>
+                        </div>
+                        <span class="status-pill">{{ visitor.get_status_display }}</span>
+                    </div>
+                    <div class="row mt-3 small">
+                        <div class="col-md-3"><strong>Phone:</strong> {{ visitor.phone }}</div>
+                        <div class="col-md-3"><strong>Vehicle:</strong> {{ visitor.vehicle_plate|default:'-' }}</div>
+                        <div class="col-md-3"><strong>Host:</strong> {{ visitor.host.full_name }}</div>
+                        <div class="col-md-3"><strong>Purpose:</strong> {{ visitor.purpose }}</div>
+                    </div>
+                    <form method="post" action="{% url 'visitors:main_gate_checkout' visitor.pk %}" class="mt-3">
+                        {% csrf_token %}
+                        <button class="btn btn-outline-success btn-sm" type="submit">Confirm Visitor Left Community</button>
+                    </form>
+                </div>
+            {% empty %}
+                <div class="soft-card p-4 text-muted">No visitor exits are waiting for main gate confirmation.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    const gateVehicleSelect = document.getElementById('gate-vehicle-select');
+    const setGateValue = (id, value) => {
+        const field = document.getElementById(id);
+        if (field) field.value = value || '';
+    };
+    if (gateVehicleSelect) {
+        gateVehicleSelect.addEventListener('change', () => {
+            const option = gateVehicleSelect.selectedOptions[0];
+            setGateValue('gate-owner', option.dataset.owner);
+            setGateValue('gate-unit', `${option.dataset.unit || ''} ${option.dataset.house ? '- ' + option.dataset.house : ''}`.trim());
+            setGateValue('gate-phone', option.dataset.phone);
+            setGateValue('gate-class', option.dataset.class);
+            setGateValue('gate-plate', option.dataset.plate);
+            setGateValue('gate-model', option.dataset.model);
+            setGateValue('gate-color', option.dataset.color);
+        });
+    }
+</script>
+{% endblock %}

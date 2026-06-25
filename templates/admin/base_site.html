@@ -1,0 +1,257 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | Tilisi Estate Traffic Admin{% endblock %}
+
+{% block branding %}
+<div class="tilisi-admin-brand">
+    <span class="tilisi-admin-mark">T</span>
+    <div>
+        <h1 id="site-name"><a href="{% url 'admin:index' %}">Tilisi Traffic Admin</a></h1>
+        <p>Community access and movement master data</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    :root {
+        --primary: #1f7a4d;
+        --secondary: #113f2a;
+        --accent: #c7a342;
+        --primary-fg: #fff;
+        --body-bg: #eef2f7;
+        --body-fg: #0f172a;
+        --hairline-color: #d9e2ec;
+        --link-fg: #1f7a4d;
+        --link-hover-color: #113f2a;
+        --button-bg: #1f7a4d;
+        --button-hover-bg: #17613d;
+        --default-button-bg: #1f7a4d;
+        --default-button-hover-bg: #17613d;
+    }
+
+    body {
+        background: linear-gradient(180deg, #f7f9fc 0%, #eef2f7 100%);
+    }
+
+    #header {
+        background: #17221d;
+        border-bottom: 3px solid var(--accent);
+        box-shadow: 0 10px 26px rgba(15, 23, 42, .12);
+        min-height: 64px;
+    }
+
+    .tilisi-admin-brand {
+        align-items: center;
+        display: flex;
+        gap: 12px;
+    }
+
+    .tilisi-admin-mark {
+        background: linear-gradient(135deg, var(--accent), #e4c66e);
+        border-radius: 999px;
+        color: #17221d;
+        display: inline-grid;
+        font-weight: 800;
+        height: 38px;
+        place-items: center;
+        width: 38px;
+    }
+
+    #branding h1,
+    #branding h1 a:link,
+    #branding h1 a:visited {
+        color: #fff;
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .tilisi-admin-brand p {
+        color: rgba(255, 255, 255, .72);
+        font-size: .82rem;
+        margin: 2px 0 0;
+    }
+
+    div.breadcrumbs {
+        background: linear-gradient(135deg, #113f2a 0%, #1f7a4d 100%);
+        color: rgba(255, 255, 255, .78);
+        padding: 13px 40px;
+    }
+
+    div.breadcrumbs a {
+        color: #fff;
+        font-weight: 600;
+    }
+
+    #content {
+        padding: 28px 40px;
+    }
+
+    #content h1 {
+        color: #0f172a;
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin-bottom: 20px;
+    }
+
+    .change-form #content-main,
+    .change-list #content-main {
+        background: #fff;
+        border: 1px solid #d9e2ec;
+        border-radius: 8px;
+        box-shadow: 0 14px 30px rgba(16, 32, 51, .08);
+        overflow: hidden;
+    }
+
+    .change-form form {
+        margin: 0;
+    }
+
+    .module {
+        border: 0;
+        margin-bottom: 0;
+    }
+
+    .module h2,
+    .module caption,
+    .inline-group h2 {
+        background:
+            radial-gradient(circle at top right, rgba(199, 163, 66, .22), transparent 30%),
+            linear-gradient(135deg, #113f2a 0%, #1f7a4d 100%);
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: 0;
+        padding: 16px 20px;
+        text-transform: none;
+    }
+
+    fieldset.module {
+        background: #fff;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 0;
+    }
+
+    fieldset.module .description {
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        color: #64748b;
+        font-size: .92rem;
+        margin: 0;
+        padding: 12px 20px;
+    }
+
+    .aligned .form-row {
+        border-bottom: 1px solid #eef2f7;
+        display: grid;
+        gap: 10px;
+        grid-template-columns: minmax(180px, 240px) minmax(260px, 1fr);
+        padding: 16px 20px;
+    }
+
+    .aligned label {
+        color: #334155;
+        font-size: .92rem;
+        font-weight: 700;
+        padding: 10px 0 0;
+        width: auto;
+    }
+
+    .aligned label.required::after {
+        color: #b42318;
+        content: " *";
+    }
+
+    .aligned .form-row > div {
+        max-width: 720px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    input[type="password"],
+    input[type="url"],
+    textarea,
+    select,
+    .select2-container--admin-autocomplete .select2-selection--single {
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        box-sizing: border-box;
+        min-height: 42px;
+        padding: 9px 12px;
+        width: min(100%, 520px);
+    }
+
+    .select2-container--admin-autocomplete {
+        width: min(100%, 520px) !important;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus,
+    .select2-container--admin-autocomplete.select2-container--focus .select2-selection--single {
+        border-color: #1f7a4d;
+        box-shadow: 0 0 0 3px rgba(31, 122, 77, .14);
+        outline: none;
+    }
+
+    .submit-row {
+        background: #f8fafc;
+        border: 0;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: flex-end;
+        margin: 0;
+        padding: 16px 20px;
+    }
+
+    .submit-row input,
+    .submit-row a.deletelink {
+        border-radius: 6px;
+        font-weight: 700;
+        min-height: 40px;
+        padding: 10px 16px;
+    }
+
+    .object-tools a:link,
+    .object-tools a:visited {
+        background: #1f7a4d;
+        border-radius: 6px;
+        font-weight: 700;
+    }
+
+    #changelist-filter {
+        border-left: 1px solid #d9e2ec;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    #changelist-search input[type="text"] {
+        width: min(100%, 420px);
+    }
+
+    @media (max-width: 767px) {
+        #content {
+            padding: 18px 14px;
+        }
+
+        div.breadcrumbs {
+            padding: 12px 14px;
+        }
+
+        .aligned .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .aligned label {
+            padding-top: 0;
+        }
+    }
+</style>
+{% endblock %}

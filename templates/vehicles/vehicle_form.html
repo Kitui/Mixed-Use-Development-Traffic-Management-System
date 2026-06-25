@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title|default:'Vehicle' }} | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="form-shell">
+    <div class="form-shell-header">
+        <p class="text-uppercase small fw-semibold mb-2">Vehicle master list</p>
+        <h1 class="h3 mb-2">{{ title|default:'Vehicle' }}</h1>
+        <p>{% if company_unit %}Register cars and motorcycles for employees at {{ company_unit }}.{% else %}Register cars and motorcycles for residents, employees, visitors, and service providers.{% endif %}</p>
+    </div>
+    <form method="post" novalidate>
+    {% csrf_token %}
+        <div class="form-shell-body">
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+            <div class="row g-4">
+                <div class="col-lg-5">
+                    <div class="form-panel">
+                        <div class="form-panel-title"><span>1</span> Vehicle Details</div>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label" for="{{ form.plate_number.id_for_label }}">{{ form.plate_number.label }}</label>
+                                {{ form.plate_number }}
+                                {{ form.plate_number.errors }}
+                            </div>
+                            {% if form.vehicle_type %}
+                                <div class="col-md-6">
+                                    <label class="form-label" for="{{ form.vehicle_type.id_for_label }}">{{ form.vehicle_type.label }}</label>
+                                    {{ form.vehicle_type }}
+                                    {{ form.vehicle_type.errors }}
+                                </div>
+                            {% endif %}
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.vehicle_class.id_for_label }}">{{ form.vehicle_class.label }}</label>
+                                {{ form.vehicle_class }}
+                                {{ form.vehicle_class.errors }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="{{ form.make_model.id_for_label }}">{{ form.make_model.label }}</label>
+                                {{ form.make_model }}
+                                {{ form.make_model.errors }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="{{ form.color.id_for_label }}">{{ form.color.label }}</label>
+                                {{ form.color }}
+                                {{ form.color.errors }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="form-panel">
+                        <div class="form-panel-title"><span>2</span> Ownership</div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.resident_owner.id_for_label }}">{{ form.resident_owner.label }}</label>
+                                {{ form.resident_owner }}
+                                {{ form.resident_owner.errors }}
+                                <div class="form-help-text mt-1">Use this for resident or employee cars and motorcycles.</div>
+                            </div>
+                            {% if form.visitor_owner %}
+                                <div class="col-md-6">
+                                    <label class="form-label" for="{{ form.visitor_owner.id_for_label }}">{{ form.visitor_owner.label }}</label>
+                                    {{ form.visitor_owner }}
+                                    {{ form.visitor_owner.errors }}
+                                    <div class="form-help-text mt-1">Use this when the vehicle belongs to a booked visitor.</div>
+                                </div>
+                            {% endif %}
+                            <div class="col-12">
+                                <div class="form-check form-switch mt-2">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">{{ form.is_active.label }}</label>
+                                </div>
+                                <div class="form-help-text mt-1">Inactive vehicles stay in records but are excluded from active movement selection.</div>
+                                {{ form.is_active.errors }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-outline-secondary" href="{% url 'vehicles:list' %}">Cancel</a>
+            <button class="btn btn-success px-4" type="submit">{% if company_unit %}Save Company Vehicle{% else %}Save Vehicle{% endif %}</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

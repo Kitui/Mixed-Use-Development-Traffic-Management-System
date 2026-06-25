@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Search | Estate Traffic Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-kicker">Smart search</div>
+        <h1 class="h3 page-title">Search</h1>
+        <p class="page-subtitle">Search by visitor, resident, phone, ID, plate, destination, or movement note.</p>
+    </div>
+</div>
+
+<form class="filter-card mb-4" method="get">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-10">
+            <label class="form-label" for="q">Search term</label>
+            <input class="form-control" id="q" name="q" value="{{ query }}" placeholder="e.g. KBE 309V, Hilda, Maisha Makao">
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100" type="submit"><svg class="app-icon"><use href="#icon-filter"></use></svg>Search</button>
+        </div>
+    </div>
+</form>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="data-card">
+            <div class="data-card-header"><h2 class="h5 mb-0">Visitors</h2></div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <tbody>
+                    {% for visitor in visitors %}
+                        <tr><td><a href="{% url 'visitors:detail' visitor.pk %}">{{ visitor.full_name }}</a><br><span class="text-muted">{{ visitor.vehicle_plate|default:'No vehicle' }} · {{ visitor.get_status_display }}</span></td></tr>
+                    {% empty %}
+                        <tr><td><div class="empty-state">No visitors found.</div></td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="data-card">
+            <div class="data-card-header"><h2 class="h5 mb-0">Residents / Employees</h2></div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <tbody>
+                    {% for resident in residents %}
+                        <tr><td>{{ resident.full_name }}<br><span class="text-muted">{{ resident.community_unit|default:'-' }} · {{ resident.house_number }} · {{ resident.phone }}</span></td></tr>
+                    {% empty %}
+                        <tr><td><div class="empty-state">No resident results.</div></td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="data-card">
+            <div class="data-card-header"><h2 class="h5 mb-0">Vehicles</h2></div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <tbody>
+                    {% for vehicle in vehicles %}
+                        <tr><td>{{ vehicle.plate_number }}<br><span class="text-muted">{{ vehicle.get_vehicle_class_display }} · {{ vehicle.make_model|default:'-' }} · {{ vehicle.color|default:'-' }}</span></td></tr>
+                    {% empty %}
+                        <tr><td><div class="empty-state">No vehicle results.</div></td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="data-card">
+            <div class="data-card-header"><h2 class="h5 mb-0">Logs</h2></div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <tbody>
+                    {% for log in logs %}
+                        <tr>
+                            <td>
+                                {{ log.recorded_at|date:"M d, Y H:i" }} · {{ log.get_direction_display }}<br>
+                                <span class="text-muted">
+                                    {% if log.resident %}{{ log.resident }}{% elif log.visitor %}{{ log.visitor }}{% elif log.vehicle %}{{ log.vehicle }}{% else %}-{% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td><div class="empty-state">No log results.</div></td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
