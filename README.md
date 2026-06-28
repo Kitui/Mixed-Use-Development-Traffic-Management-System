@@ -130,6 +130,7 @@ Deployment helper files are included:
 - `.env.example`: environment variable template
 - `Procfile`: process command for simple cloud hosts
 - `build.sh`: collect static files and run migrations
+- `render.yaml`: Render blueprint for a web service and PostgreSQL database
 - `runtime.txt`: Python version hint
 - `DEPLOYMENT.md`: prototype deployment guide
 
